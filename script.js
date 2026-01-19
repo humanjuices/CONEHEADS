@@ -30,7 +30,10 @@ function ensureScrollableHeight() {
 
   // Add breathing room so the user can scroll past the last element.
   const target = Math.max(maxBottom + 800, window.innerHeight + 2000);
-  document.body.style.height = `${Math.ceil(target)}px`;
+  const px = `${Math.ceil(target)}px`;
+  // Mobile Safari can be picky; set both html + body.
+  document.documentElement.style.height = px;
+  document.body.style.height = px;
 }
 
 function startAutoScroll() {
@@ -41,7 +44,7 @@ function startAutoScroll() {
   ensureScrollableHeight();
 
   // Very slow scroll (px/sec) — slow but perceptible
-  const SPEED = 18;
+  const SPEED = 26;
   let lastT = performance.now();
 
   const tick = (t) => {
@@ -53,13 +56,19 @@ function startAutoScroll() {
     // (cheap enough, and keeps autoscroll reliable)
     ensureScrollableHeight();
 
-    const maxScroll = Math.max(0, document.documentElement.scrollHeight - window.innerHeight);
-    if (window.scrollY >= maxScroll - 1) {
+    const scrollY = window.pageYOffset ?? window.scrollY ?? 0;
+    const scrollH = Math.max(
+      document.documentElement.scrollHeight || 0,
+      document.body.scrollHeight || 0,
+    );
+    const maxScroll = Math.max(0, scrollH - window.innerHeight);
+
+    if (scrollY >= maxScroll - 1) {
       stopAutoScroll();
       return;
     }
 
-    window.scrollTo(0, window.scrollY + SPEED * dt);
+    window.scrollTo(0, scrollY + SPEED * dt);
     __autoScrollRaf = requestAnimationFrame(tick);
   };
 
